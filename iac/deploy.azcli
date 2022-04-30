@@ -1,0 +1,6 @@
+resourceGroup="rg-azure-monitor-handler"
+location="South Central US"
+
+az group create --name $resourceGroup --location "$location"
+
+az deployment group create --name DeployAzureMonitorHandlerResources --resource-group $resourceGroup --template-file .\main.bicep
