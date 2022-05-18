@@ -2,10 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Attach to .NET Functions",
-            "type": "coreclr",
+            "name": "Attach to Node Functions",
+            "type": "node",
             "request": "attach",
-            "processId": "${command:azureFunctions.pickProcess}"
+            "port": 9229,
+            "preLaunchTask": "func: host start"
         }
     ]
 }

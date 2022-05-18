@@ -1,8 +1,9 @@
 {
-    "azureFunctions.deploySubpath": "src\\AzureMonitorHandler.Functions\\EventGridToAppInsightsAndBlob/bin/Release/net6.0/publish",
-    "azureFunctions.projectLanguage": "C#",
+    "azureFunctions.deploySubpath": "src\\AzureMonitorHandler.Functions",
+    "azureFunctions.projectLanguage": "JavaScript",
     "azureFunctions.projectRuntime": "~4",
     "debug.internalConsoleOptions": "neverOpen",
-    "azureFunctions.preDeployTask": "publish (functions)",
-    "azureFunctions.projectSubpath": "src\\AzureMonitorHandler.Functions"
+    "azureFunctions.preDeployTask": "npm prune (functions)",
+    "azureFunctions.projectSubpath": "src\\AzureMonitorHandler.Functions",
+    "azureFunctions.postDeployTask": "npm install (functions)"
 }
