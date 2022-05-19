@@ -2,9 +2,12 @@ const appInsights = require("applicationinsights");
 appInsights.setup();
 const appInsightsClient = appInsights.defaultClient;
 
+const { DefaultAzureCredential } = require("@azure/identity");
+const defaultAzureCredential = new DefaultAzureCredential();
+
 const { BlobServiceClient } = require("@azure/storage-blob");
-const STORAGE_CONNECTION_STRING = process.env.STORAGE_CONNECTION_STRING || "";
-const blobServiceClient = BlobServiceClient.fromConnectionString(STORAGE_CONNECTION_STRING);
+const STORAGE_ACCOUNT_ENDPOINT_BLOB = process.env.STORAGE_ACCOUNT_ENDPOINT_BLOB || "";
+const blobServiceClient = new BlobServiceClient(STORAGE_ACCOUNT_ENDPOINT_BLOB, defaultAzureCredential);
 
 module.exports = async function (context, eventGridEvent) {
     context.log(typeof eventGridEvent);

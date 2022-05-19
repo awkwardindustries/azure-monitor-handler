@@ -3,17 +3,15 @@ const { generateUuid } = require("@azure/core-http");
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
 
-    const name = (req.query.name || (req.body && req.body.name));
-    const responseMessage = name
-        ? "Hello, " + name + ". This HTTP triggered function executed successfully."
-        : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
+    const responseMessage = "This HTTP triggered function executed successfully."
 
+    var timestamp = new Date().toISOString();
+    var messageId = generateUuid();
     context.bindings.outputEvent = {
-        "topic": "/subscriptions/6d1cc86a-ad12-4f88-8923-5e0c418b4acf/resourceGroups/rg-test-azmon/providers/Microsoft.EventGrid/topics/evgt-2nz6ktw5gxivg",
         "subject": "function/manualcreate",
         "eventType": "somethingHappened",
-        "eventTime": new Date().toISOString(),
-        "id": generateUuid(),
+        "eventTime": timestamp,
+        "id": messageId,
         "data": {
             "fileUrl": "https://test.blob.core.windows.net/debugging/testblob.txt",
             "fileType": "AzureBlockBlob",

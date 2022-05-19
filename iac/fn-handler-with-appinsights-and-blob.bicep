@@ -28,8 +28,17 @@ resource monitoringMetricsPublisher 'Microsoft.Authorization/roleDefinitions@201
 
 // Assign roles to the managed identity
 resource storageBlobDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  name: guid(resourceGroup().id, managedIdentity.id, storageBlobDataOwner.id)
+  name: guid(resourceGroup().id, managedIdentity.id, storageBlobDataOwner.id, storageAccount.id)
   scope: storageAccount
+  properties: {
+    roleDefinitionId: storageBlobDataOwner.id
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+resource functionStorageBlobDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
+  name: guid(resourceGroup().id, managedIdentity.id, storageBlobDataOwner.id, functionAppStorageAccount.id)
+  scope: functionAppStorageAccount
   properties: {
     roleDefinitionId: storageBlobDataOwner.id
     principalId: managedIdentity.properties.principalId
@@ -50,7 +59,7 @@ resource monitoringMetricsPublisherRoleAssignment 'Microsoft.Authorization/roleA
 //
 // * Log Analytics Workspace
 // * Application Insights
-// * Storage Account
+// * Storage Account & target container
 // ------------------------------------------------------------------
 
 param workspaceName string = 'log-${uniqueName}'
@@ -90,6 +99,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' = {
     minimumTlsVersion: 'TLS1_2'
     accessTier: 'Hot'
   }
+}
+
+param blobContainerName string = 'events'
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  name: '${storageAccount.name}/default/${blobContainerName}'
 }
 
 // ------------------------------------------------------------------
@@ -173,31 +187,35 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${functionAppStorageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${functionAppStorageAccount.listKeys().keys[0].value}'
         }
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: appInsights.properties.InstrumentationKey
-        }
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: 'InstrumentationKey=${appInsights.properties.InstrumentationKey}'
-        }
-        {
           name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'dotnet'
+          value: 'node'
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
           value: '~4'
         }
         {
-          name: 'EventGridSource_topicUri'
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: '~14'
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: appInsights.properties.ConnectionString
+        }
+        {
+          name: 'EVENT_GRID_TOPIC_URI'
           value: eventGridTopic.properties.endpoint
         }
         {
-          name: 'EventGridSource_topicKey'
+          name: 'EVENT_GRID_TOPIC_KEY'
           value: eventGridTopic.listKeys().key1
         }
         {
-          name: 'DestinationStore__serviceUri'
+          name: 'AZURE_CLIENT_ID'
+          value: managedIdentity.properties.clientId
+        }
+        {
+          name: 'STORAGE_ACCOUNT_ENDPOINT_BLOB'
           value: storageAccount.properties.primaryEndpoints.blob
         }
       ]
@@ -224,28 +242,45 @@ resource eventGridTopic 'Microsoft.EventGrid/topics@2021-12-01' = {
   location: location
 }
 
-// @description('Name for the Event Grid Topic Subscription')
-// param eventGridSubscriptionName string = 'evgs-${uniqueName}'
-
-// resource eventGridSubscription 'Microsoft.EventGrid/eventSubscriptions@2021-12-01' = {
-//   name: eventGridSubscriptionName
-//   scope: eventGridTopic
+// Because these resources are allocated before the Function code is deployed to the Function
+// App, we cannot automatically create the Event Subscription. If the Function were able to be
+// represented by a Bicep resource (e.g., using something like:
+//    resource processEventFunction 'Microsoft.Web/sites/functions@2021-03-01' existing = {
+//      parent: functionApp
+//      name: '<NAME-OF-FUNCTION>'
+//    }
+// ), you could create the subscription declaratively like this:
+// 
+// resource eventGridSubscription 'Microsoft.EventGrid/topics/eventSubscriptions@2021-10-15-preview' = {
+//   parent: eventGridTopic
+//   name: 'function-handler'
 //   properties: {
-//     /*
-//     destination: {
-//       endpointType: 'AzureMonitor'
-//       properties: {
-//         resourceId: logAnalyticsWorkspace.id
-//       }
-//     }
-//     */
 //     deliveryWithResourceIdentity: {
 //       destination: {
 //         endpointType: 'AzureFunction'
+//         properties: {
+//           resourceId: processEventFunction.id
+//         }
 //       }
 //       identity: {
 //         type: 'UserAssigned'
 //         userAssignedIdentity: managedIdentity.properties.principalId
+//       }
+//     }
+//   }
+// }
+
+// Although we're using an Azure Function handler, it would be ideal for this scenario if
+// an Azure Monitor handler could be automatically handled after declaration similar to:
+//
+// resource eventGridSubscription 'Microsoft.EventGrid/topics/eventSubscriptions@2021-10-15-preview' = {
+//   parent: eventGridTopic
+//   name: 'monitor-handler'
+//   properties: {
+//     destination: {
+//       endpointType: 'AzureMonitor'
+//       properties: {
+//         resourceId: logAnalyticsWorkspace.id
 //       }
 //     }
 //   }
