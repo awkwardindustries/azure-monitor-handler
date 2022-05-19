@@ -4,7 +4,7 @@
 
 Azure Event Grid offers several built-in handlers, but none that push directly to Azure Monitor. This sample uses an Azure Function handler that can be registered as an Event Grid handler for any Event Grid topic from which events should be logged. The sample handles the event in two ways -- creating a custom Application Insights event and persisting to Azure Blob Storage.
 
-![Resource diagram of conceptual architecture](./.assets/event-grid_to_app-insights.svg)
+![Resource diagram of conceptual architecture](./.assets/event-grid_to_app-insights.png)
 
 While not required, this sample was created using Visual Studio Code with the Azure Functions extension. The extension provides some useful shortcuts for debugging locally and deploying to Azure. If you would prefer use a different code editor, please refer to the files under the `.vscode` directory to see what commands are being used by the extension and VS Code to support local building, debugging, and deployment.
 
