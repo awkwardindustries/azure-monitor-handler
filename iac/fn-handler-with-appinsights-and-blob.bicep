@@ -215,7 +215,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
           value: managedIdentity.properties.clientId
         }
         {
-          name: 'STORAGE_ACCOUNT_ENDPOINT_BLOB'
+          name: 'OUTPUT_STORAGE_ACCOUNT__blobServiceUri'
           value: storageAccount.properties.primaryEndpoints.blob
         }
       ]

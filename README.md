@@ -2,7 +2,7 @@
 
 ## Overview
 
-Azure Event Grid offers several built-in handlers, but none that push directly to Azure Monitor. This sample uses an Azure Function handler that can be registered as an Event Grid handler for any Event Grid topic from which events should be logged. The sample handles the event in two ways -- creating a custom Application Insights event and persisting to Azure Blob Storage.
+Azure Event Grid offers several built-in handlers, but none that push directly to Azure Monitor. This sample uses two Azure Functions that can be registered as Event Grid handlers for any Event Grid topic from which events should be logged. The sample handles the event in two ways -- creating a custom Application Insights event and/or persisting to Azure Blob Storage.
 
 ![Resource diagram of conceptual architecture](./.assets/event-grid_to_app-insights.png)
 
@@ -18,28 +18,27 @@ At the base of the *src/AzureMonitorHandler.Functions* directory, create or upda
 {
   "IsEncrypted": false,
   "Values": {
-    /* For running locally, you can use the Azurite storage emulator as described
-     * here: https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azurite.
-     * You can also use an Azure Storage Account connection string if desired. */
-    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=https://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=https://127.0.0.1:10001/devstoreaccount1;",
-    /* Tells the Functions runtime this is a Node function. */
-    "FUNCTIONS_WORKER_RUNTIME": "node",
-    /* Tells the Functions runtime this should use Node 14. */
-    "WEBSITE_NODE_DEFAULT_VERSION": "~14",
-    /* Required for local debugging. */
-    "languageWorkers:node:arguments": "--inspect=5858",
     /* An Azure Application Insights resource connection string is required. */
     "APPLICATIONINSIGHTS_CONNECTION_STRING": "<APPLICATION_INSIGHTS_CONNECTION_STRING>",
-    /* These aren't required for local development unless you want to trigger the CreateEvent
-     * function and verify publish to the Event Grid Topic. You can also use an
-     * Azure Event Grid Topic resource if desired. */
-    "EVENT_GRID_TOPIC_URI": "",
-    "EVENT_GRID_TOPIC_KEY": "",
     /* Defines the storage target. For local development you can use the Azurite storage emulator,
      * or you can use an Azure resource (e.g., https://<ACCOUNTNAME>.blob.core.windows.net) as
      * long as the local credentials used to run the function have Storage Account Owner permissions
-     * on the target account. */
-    "STORAGE_ACCOUNT_ENDPOINT_BLOB": "https://127.0.0.1:10000/devstoreaccount1"
+     * on the target account. This assumes you're running Azurite as described next. */
+    "OUTPUT_STORAGE_ACCOUNT__blobServiceUri": "https://127.0.0.1:10000/devstoreaccount1",
+    /* These aren't required for local development unless you want to trigger the CreateEvent
+     * function and verify publish to the specified Azure Event Grid Topic. */
+    "EVENT_GRID_TOPIC_URI": "",
+    "EVENT_GRID_TOPIC_KEY": "",
+    /* Required by the Function App host. For local development you can use the Azurite storage 
+     * emulator, or you can use an Azure resource's connection string. This assumes you're running 
+     * Azurite as described next.
+     * Note: Connecting with an identity is in Preview, but it is not recommended over a connection
+     * string without caution. */
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=https://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=https://127.0.0.1:10001/devstoreaccount1;",
+    /* Required for local debugging. */
+    "languageWorkers:node:arguments": "--inspect=5858",
+    /* Tells the Functions runtime this is a Node function. */
+    "FUNCTIONS_WORKER_RUNTIME": "node"
   }
 }
 ```
@@ -111,7 +110,7 @@ If you'd like to debug your local code against an actual Event Grid event, you c
 
 1. **Provision the Resources**
    ```bash
-   # Bash commands from the /iac directory
+   # Run from the /iac directory
    resourceGroup="rg-sample-eg-to-azmon"
    location="southcentralus"
 
@@ -122,5 +121,11 @@ If you'd like to debug your local code against an actual Event Grid event, you c
    az deployment group create --name DeployResources --resource-group $resourceGroup \
      --template-file .\fn-handler-with-appinsights-and-blob.bicep
    ```
-1. **Deploy the Function Code** Using VS Code's Azure Function extension, highlight the Local Project and click the *Deploy to Function App...* button on the Functions section header. This action will build the code for production, create a Zip package, and deploy to the specified Function App.
+1. **Deploy the Function Code** 
+   * Using VS Code's Azure Function extension, highlight the Local Project and click the *Deploy to Function App...* button on the Functions section header. This action will build the code for production, create a Zip package, and deploy to the specified Function App.
+   * Alternatively, you can use the Azure Functions Core Tools:
+     ```sh
+     # Run from the /src/AzureMonitorHandler.Functions directory
+     func azure functionapp publish <function-app-name>
+     ```
 1. **Trigger an Event** The output from a successful deployment will include the Function URI to invoke the CreateEvent function. Open the URL and verify that the HTTP triggered function executed successfully.

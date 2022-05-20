@@ -1,7 +1,12 @@
 {
   "name": "azuremonitorhandler.functions",
   "version": "1.0.0",
-  "description": "",
+  "description": "A sample project showing example Azure Functions that are triggered by Event Grid and log the event to either Application Insights or Blob Storage.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awkwardindustries/azure-monitor-handler.git"
+  },
   "scripts": {
     "start": "func start",
     "test": "echo \"No tests yet...\""
