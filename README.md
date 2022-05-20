@@ -66,12 +66,12 @@ If using VS Code, launch the `Attach to Node Functions` configuration using **F5
 
 For HTTP triggered events (such as CreateEvent), you can use the HTTP endpoint exposed in the log or right-click on the function in the Azure Functions extension Functions browser and click *Execute Function Now...*.
 
-### Trigger ProcessEvent
+### Trigger Event Grid Triggerd Functions
 
-When debugging locally, you can trigger functions dependent on Event Grid triggers by creating a `POST` request to the local address `http://localhost:7071/runtime/webhooks/EventGrid` with the query parameter `functionName` equal to the function you'd like to trigger. The body should contain a JSON array with a single object matching the Event Grid event schema.
+When debugging locally, you can trigger functions dependent on Event Grid triggers by creating a `POST` request to the local address `http://localhost:7071/runtime/webhooks/EventGrid` with the query parameter `functionName` equal to the function you'd like to trigger. The body should contain a JSON array with a single object matching the Event Grid event schema. In our case, you can trigger either the *ToAppInsights* or *ToBlobStorage* functions.
 
 ```http
-POST /runtime/webhooks/EventGrid?functionName=ProcessEvent HTTP/1.1
+POST /runtime/webhooks/EventGrid?functionName=ToAppInsights HTTP/1.1
 Host: localhost
 Aeg-Event-Type: Notification
 Content-Type: application/json
@@ -102,7 +102,7 @@ Content-Type: application/json
 
 > Note: The request header `Aeg-Event-Type: Notification` is important and must be included; otherwise, the function will not be triggered.
 
-If you've dropped a breakpoint into the ProcessEvent's index.js function export, VS Code's debugger should break to allow local variable investigation and stepping through the function handler code.
+If you've dropped a breakpoint into the ToAppInsights's index.js function export, VS Code's debugger should break to allow local variable investigation and stepping through the function handler code.
 
 If you'd like to debug your local code against an actual Event Grid event, you can use the ngrok utility to expose the local function as an Event Grid webhook subscription. See <https://docs.microsoft.com/en-us/azure/azure-functions/functions-debug-event-grid-trigger-local#allow-azure-to-call-your-local-function> for detailed directions on how to setup.
 
