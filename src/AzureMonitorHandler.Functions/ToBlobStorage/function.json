@@ -8,7 +8,7 @@
     {
       "type": "blob",
       "name": "outputBlob",
-      "path": "events/{DateTime.UtcNow}",
+      "path": "events/{rand-guid}.json",
       "connection": "OUTPUT_STORAGE_ACCOUNT",
       "direction": "out"
     }
