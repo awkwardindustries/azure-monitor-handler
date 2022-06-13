@@ -1,0 +1,53 @@
+### Trigger CloudEventToAppInsights function
+POST http://localhost:7071/api/CloudEventToAppInsights
+Content-Type: application/json
+
+{
+    "specversion": "1.0",
+    "type": "Microsoft.Storage.BlobCreated",  
+    "source": "/subscriptions//5b4b650e-28b9-4790-b3ab-ddbd88d727c4/resourceGroups/test/providers/Microsoft.Storage/storageAccounts/test",
+    "id": "{{ $guid }}",
+    "time": "${{ $datetime iso8601 }}",
+    "subject": "blobServices/default/containers/testcontainer/blobs/test-file.png",
+    "data": {
+        "api": "PutBlockList",
+        "clientRequestId": "{{ $guid }}",
+        "requestId": "{{ $guid }}",
+        "eTag": "0x8D76C39E4407333",
+        "contentType": "image/png",
+        "contentLength": 30699,
+        "blobType": "BlockBlob",
+        "url": "https://test.blob.core.windows.net/testcontainer/test-file.png",
+        "sequencer": "000000000000000000000000000099240000000000c41c18",
+        "storageDiagnostics": {
+            "batchId": "{{ $guid }}"
+        }
+    }
+}
+
+### Trigger CloudEventToBlobStorage function
+POST http://localhost:7071/api/CloudEventToBlobStorage
+Content-Type: application/json
+
+{
+    "specversion": "1.0",
+    "type": "Microsoft.Storage.BlobCreated",  
+    "source": "/subscriptions//5b4b650e-28b9-4790-b3ab-ddbd88d727c4/resourceGroups/test/providers/Microsoft.Storage/storageAccounts/test",
+    "id": "{{ $guid }}",
+    "time": "${{ $datetime iso8601 }}",
+    "subject": "blobServices/default/containers/testcontainer/blobs/test-file.png",
+    "data": {
+        "api": "PutBlockList",
+        "clientRequestId": "{{ $guid }}",
+        "requestId": "{{ $guid }}",
+        "eTag": "0x8D76C39E4407333",
+        "contentType": "image/png",
+        "contentLength": 30699,
+        "blobType": "BlockBlob",
+        "url": "https://test.blob.core.windows.net/testcontainer/test-file.png",
+        "sequencer": "000000000000000000000000000099240000000000c41c18",
+        "storageDiagnostics": {
+            "batchId": "{{ $guid }}"
+        }
+    }
+}
