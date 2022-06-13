@@ -1,0 +1,26 @@
+POST http://localhost:7071/runtime/webhooks/EventGrid?functionName=EventGridEventToAppInsights
+Aeg-Event-Type: Notification
+Content-Type: application/json
+
+[
+    {
+        "id": "a1c4e585-e3de-4f7c-b2b2-092d67aa4237",
+        "topic": "my-topic",
+        "subject": "my-subject",
+        "data": {
+            "fileUrl": "https://test.blob.core.windows.net/debugging/testblob.txt",
+            "fileType": "AzureBlockBlob",
+            "partitionId": "1",
+            "sizeInBytes": 0,
+            "eventCount": 0,
+            "firstSequenceNumber": -1,
+            "lastSequenceNumber": -1,
+            "firstEnqueueTime": "0001-01-01T00:00:00Z",
+            "lastEnqueueTime": "0001-01-01T00:00:00Z"
+        },
+        "eventType": "somethingHappened",
+        "dataVersion": "1.0",
+        "metadataVersion": "1",
+        "eventTime": "2022-05-18T17:34:01.92Z"
+    }
+]

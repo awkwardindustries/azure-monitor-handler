@@ -8,9 +8,17 @@ Azure Event Grid offers several built-in handlers, but none that push directly t
 
 While not required, this sample was created using Visual Studio Code with the Azure Functions extension. The extension provides some useful shortcuts for debugging locally and deploying to Azure. If you would prefer use a different code editor, please refer to the files under the `.vscode` directory to see what commands are being used by the extension and VS Code to support local building, debugging, and deployment.
 
+### Schema Support
+
+This solution includes support for the default Event Grid Event schema and CloudEvents schema. The Event Grid trigger only supports the default schema; however, HTTP-triggered functions are used to handle Event Grid events in the CloudEvents schema. When setting up your event subscription, they will use the Webhook event delivery mechanism instead of tying directly to the function. They need to support sending a validation response to event subscription validation requests, and otherwise they are invoked once per element of the event array contained within the request body received when the Webhook Event is called. 
+
+### Alternative Approach
+
+While this solution includes Azure Functions as an intermediate to handle the destinations of Application Insights or Blob Storage in leiu of a built-in Event Grid handler, there may be cases where the [Capture feature of Event Hubs](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-capture-overview) is a better fit for providing a long-term audit store of events. The Event Hubs Capture functionality is the best way to automatically capture streaming data to a long-term store. Additionally, there is a [built-in integration Event Grid handler for Event Hubs](https://docs.microsoft.com/en-us/azure/event-grid/handler-event-hubs) so that an intermediate Function would not be required.
+
 ## Run Locally
 
-### Azure Functions settings
+### 1. Update Azure Functions settings
 
 At the base of the *src/AzureMonitorHandler.Functions* directory, create or update the `local.settings.json` file to include:
 
@@ -25,7 +33,7 @@ At the base of the *src/AzureMonitorHandler.Functions* directory, create or upda
      * long as the local credentials used to run the function have Storage Account Owner permissions
      * on the target account. This assumes you're running Azurite as described next. */
     "OUTPUT_STORAGE_ACCOUNT__blobServiceUri": "https://127.0.0.1:10000/devstoreaccount1",
-    /* These aren't required for local development unless you want to trigger the CreateEvent
+    /* These aren't required for local development unless you want to trigger the CreateEventGridEvent
      * function and verify publish to the specified Azure Event Grid Topic. */
     "EVENT_GRID_TOPIC_URI": "",
     "EVENT_GRID_TOPIC_KEY": "",
@@ -43,7 +51,7 @@ At the base of the *src/AzureMonitorHandler.Functions* directory, create or upda
 }
 ```
 
-### Run Azurite Storage Emulator
+### 2. Run Azurite Storage Emulator
 
 1. **Create a PEM certificate**
    ```sh
@@ -60,49 +68,21 @@ At the base of the *src/AzureMonitorHandler.Functions* directory, create or upda
        --cert /certs/cert.pem --key /certs/key.pem --oauth basic
    ```
 
-### Run the Functions
+### 3. Run the Functions
 
 If using VS Code, launch the `Attach to Node Functions` configuration using **F5** or from the *Run and Debug* view. This action should re-build and start the Functions runtime. If successful, your Terminal will show the output log of the local Azure Function Core Tools.
 
-For HTTP triggered events (such as CreateEvent), you can use the HTTP endpoint exposed in the log or right-click on the function in the Azure Functions extension Functions browser and click *Execute Function Now...*.
+For HTTP triggered events (such as CreateEventGridEvent), you can use the HTTP endpoint exposed in the log or right-click on the function in the Azure Functions extension Functions browser and click *Execute Function Now...*.
 
-### Trigger Event Grid Triggerd Functions
+### 4. Trigger Functions
 
-When debugging locally, you can trigger functions dependent on Event Grid triggers by creating a `POST` request to the local address `http://localhost:7071/runtime/webhooks/EventGrid` with the query parameter `functionName` equal to the function you'd like to trigger. The body should contain a JSON array with a single object matching the Event Grid event schema. In our case, you can trigger either the *ToAppInsights* or *ToBlobStorage* functions.
+The fastest way to test the functions locally is to create an HTTP request to trigger the functions. 
 
-```http
-POST /runtime/webhooks/EventGrid?functionName=ToAppInsights HTTP/1.1
-Host: localhost
-Aeg-Event-Type: Notification
-Content-Type: application/json
+Event Grid triggered functions support triggering via request locally via a special local address `http://localhost:7071/runtime/webhooks/EventGrid`. An example of the request can be found in the `rest-samples/eventgridevent.rest` file (and directly sent if using the VS Code [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)).
 
-[
-    {
-        "id": "a1c4e585-e3de-4f7c-b2b2-092d67aa4237",
-        "topic": "my-topic",
-        "subject": "my-subject",
-        "data": {
-            "fileUrl": "https://test.blob.core.windows.net/debugging/testblob.txt",
-            "fileType": "AzureBlockBlob",
-            "partitionId": "1",
-            "sizeInBytes": 0,
-            "eventCount": 0,
-            "firstSequenceNumber": -1,
-            "lastSequenceNumber": -1,
-            "firstEnqueueTime": "0001-01-01T00:00:00Z",
-            "lastEnqueueTime": "0001-01-01T00:00:00Z"
-        },
-        "eventType": "somethingHappened",
-        "dataVersion": "1.0",
-        "metadataVersion": "1",
-        "eventTime": "2022-05-18T17:34:01.92Z"
-    }
-]
-```
+The HTTP-triggered functions may be locally triggered via HTTP request as well. The body should be a JSON object conforming to the CloudEvent schema. Examples of the requests can be found in the `rest-samples/cloudevent.rest` file.
 
-> Note: The request header `Aeg-Event-Type: Notification` is important and must be included; otherwise, the function will not be triggered.
-
-If you've dropped a breakpoint into the ToAppInsights's index.js function export, VS Code's debugger should break to allow local variable investigation and stepping through the function handler code.
+If you've dropped a breakpoint into the triggered function's index.js function export, VS Code's debugger should break to allow local variable investigation and stepping through the function handler code.
 
 If you'd like to debug your local code against an actual Event Grid event, you can use the ngrok utility to expose the local function as an Event Grid webhook subscription. See <https://docs.microsoft.com/en-us/azure/azure-functions/functions-debug-event-grid-trigger-local#allow-azure-to-call-your-local-function> for detailed directions on how to setup.
 
@@ -128,4 +108,4 @@ If you'd like to debug your local code against an actual Event Grid event, you c
      # Run from the /src/AzureMonitorHandler.Functions directory
      func azure functionapp publish <function-app-name>
      ```
-1. **Trigger an Event** The output from a successful deployment will include the Function URI to invoke the CreateEvent function. Open the URL and verify that the HTTP triggered function executed successfully.
+1. **Trigger an Event** The output from a successful deployment will include the Function URI to invoke the CreateEventGridEvent function. Open the URL and verify that the HTTP triggered function executed successfully.
