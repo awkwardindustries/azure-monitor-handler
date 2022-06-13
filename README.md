@@ -14,7 +14,7 @@ This solution includes support for the default Event Grid Event schema and Cloud
 
 ### Alternative Approach
 
-While this solution includes Azure Functions as an intermediate to handle the destinations of Application Insights or Blob Storage in leiu of a built-in Event Grid handler, there may be cases where the [Capture feature of Event Hubs](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-capture-overview) is a better fit for providing a long-term audit store of events. The Event Hubs Capture functionality is the best way to automatically capture streaming data to a long-term store. Additionally, there is a [built-in integration Event Grid handler for Event Hubs](https://docs.microsoft.com/en-us/azure/event-grid/handler-event-hubs) so that an intermediate Function would not be required.
+While this solution includes Azure Functions as an intermediate to handle the destination of Azure Blob Storage in lieu of a built-in Event Grid handler, there may be cases where the [Capture feature of Event Hubs](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-capture-overview) is a better fit for providing a long-term audit store of events. The Event Hubs Capture functionality is the best way to automatically capture streaming data to a long-term store. Additionally, there is a [built-in integration Event Grid handler for Event Hubs](https://docs.microsoft.com/en-us/azure/event-grid/handler-event-hubs) so that an intermediate Function would not be required.
 
 ## Run Locally
 
